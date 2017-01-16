@@ -1,0 +1,98 @@
+蓝牙在linux下需要的库
+bluez-libs-3.36.tar.gz
+expat-2.1.0.tar.gz
+dbus-1.10.0.tar.gz 
+glib-2.26.1.tar.gz
+bluez-utils-3.36.tar.gz
+libusb-1.0.9.tar.bz2
+
+1，编译bluez-libs-3.36.tar.gz
+tar zxvf bluez-lib-3.36.tar.gz
+./configure --prefix=/opt/arm/bluez --host=arm-linux --target=arm-linux CC=arm-linux-gcc
+make 
+make install
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+2，编译expat-2.1.0.tar.gz
+tar zxvf expat-2.1.0.tar.gz
+./configure --prefix=/opt/arm/bluez --host=arm-linux --target=arm-linux     CC=arm-linux-gcc
+make 
+make install
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+3，编译dbus-1.10.0.tar.gz
+tar zxvf dbus-1.10.0
+
+/*如果不想出现问题configure: error: Could not find expat.h, check config.log for failed attempts那么就要先执行下面两行export*/
+export LDFLAGS=-Wl,-L/usr/local/lib,-lexpat 
+export CPPFLAGS=-I/usr/local/include
+
+echo ac_cv_have_abstract_sockets=yes>arm-linux.cache
+./configure --prefix=/opt/arm/bluez --host=arm-linux --target=arm-linux     CC="arm-linux-gcc -I/opt/arm/bluez/include -L/opt/arm/bluez/lib" --cache-file=arm-linux.cache --with-x=no
+make 
+make install
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+4，编译glib-2.26.1.tar.gz
+安装glib 时出现glib msgfmt.. no （这个问题极易出现在Ubuntu 上） 
+解决方案：apt-get install gettest
+
+安装glib 时出现 error: Could not find a glib-genmarshal in your PATH， 
+解决方案：先在主机安装 apt-get install libglib2.0-dev一
+
+configure: error: cannot run test program while cross compiling 
+就检查依赖关系，然后修改arm-linux.cache文件 
+向arm-linux.cache文件中写入配置信息，我们在编译前通过echo向该文件中写入的配置，就是为了解决这些问题
+
+configure: error: Could not find a glib-genmarshal in your PATH 
+安装libglib2.0-dev 
+sudo apt-get install libglib2.0-dev
+
+tar  -zxjf  glib-2.26.1.tar.gz
+echo ac_cv_type_long_long=yes>arm-linux.cache
+echo glib_cv_stack_grows=no>>arm-linux.cache
+echo glib_cv_uscore=no>>arm-linux.cache
+echo ac_cv_func_posix_getpwuid_r=yes>>arm-linux.cache
+echo ac_cv_func_posix_getgrgid_r=yes>>arm-linux.cache
+#注意：">"和">>"的区别
+
+./configure --prefix=/opt/arm/bluez --host=arm-linux --target=arm-linux     CC="arm-linux-gcc -I/opt/arm/bluez/include -L/opt/arm/bluez/lib" --cache-file=arm-linux.cache
+make 
+make install
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+5，编译bluez-utils-3.36.tar.gz
+
+bluez-utils ./configure 时出现：BLUEZ no Bluetooth library is required 
+解决方案：sudo apt-get install libbluetooth-dev
+
+bluez-utils ./configure 时出现：configure: error: D-Bus library is required 
+解决方案：sudo apt-get install libdbus-1-dev libdbus-glib-1-dev
+
+bluez-utils 编译 make 时出现bluez libgmodule-2.0.so could not read symbols: File in wrong 等 
+解决方案： 查看 glib 配置时的 arm-linux.cache 和环境变量的配置，问题极有可能出现在这里
+
+tar zxvf bluez-utils-3.36.tar.gz
+./configure --prefix=/opt/arm/bluez --host=arm-linux --target=arm-linux     CC="arm-linux-gcc -I/opt/arm/bluez/include -L/opt/arm/bluez/lib" --disable-audio
+make 
+make install
+
+
+
+
+
+到这里其实蓝牙需要的软件和应用程序都有了。
+
+6，libusb-1.0.9.tar.bz2
+这个库我看是USB驱动蓝牙的库，我用的IMX6平台上面是SDIOwifi和串口蓝牙，没有用到USB部分所以没有编译USB的库
+
